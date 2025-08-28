@@ -12,7 +12,7 @@
 
 ================================
 
-How to use:
+# How to use:
 
 
 Insert all your assets inside the "game_files" folder,
@@ -26,4 +26,4 @@ use "self." to mention a variable from inside that code.
 Every .lua file inside script folder will be run when the game
 starts, so use it to define global variables and custom functions.
 
-(Made by neofenixlive)
+##### (Made by neofenixlive)
