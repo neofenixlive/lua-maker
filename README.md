@@ -4,11 +4,11 @@
 
 
 
-.:Around 10kb file size:.
+.:Lightweight 10kb library size:.
 
-.:Uses snake_case:.
+.:Uses snake_case for variables/functions:.
 
-.:Similar to GameMakerLanguage:.
+.:Easy to understand and code:.
 
 ================================
 
