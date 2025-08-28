@@ -1,9 +1,9 @@
 ================================
 LuaMaker 0.1 - LÖVE2D Game development library
 
-.:Only 10kb library size:.
-.:Uses snake_case:.
-.:Similar to GameMaker:.
+.:Lightweight 10kb library size:.
+.:Uses snake_case for variables/functions:.
+.:Easy to understand and code:.
 
 Made by neofenixlive
 ================================
