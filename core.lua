@@ -15,9 +15,10 @@ function load_images()
     local image_list = love.filesystem.getDirectoryItems("game_files/image")
     GAME_DATA.file.image = {}
     
+    local extensions = {".png", ".jpg", ".bmp", ".tga"}
     for _, img in ipairs(image_list) do
         local name = img
-        for format in {".png", ".jpg", ".bmp", ".tga"} do
+        for _, format in ipairs(extensions) do
             string.gsub(name, format, "")
         end
 
@@ -29,9 +30,10 @@ function load_sounds()
     local sound_list = love.filesystem.getDirectoryItems("game_files/sound")
     GAME_DATA.file.sound = {}
     
+    local extensions = {".mp3", ".wav", ".ogg"}
     for _, snd in ipairs(sound_list) do
         local name = snd
-        for format in {".mp3", ".wav", ".ogg"} do
+        for _, format in ipairs(extensions) do
             string.gsub(name, format, "")
         end
 
