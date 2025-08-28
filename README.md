@@ -4,11 +4,11 @@
 
 
 
-.:Only 10kb library size:.
+.:Around 10kb file size:.
 
 .:Uses snake_case:.
 
-.:Similar to GameMaker:.
+.:Similar to GameMakerLanguage:.
 
 ================================
 
