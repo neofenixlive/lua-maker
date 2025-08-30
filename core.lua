@@ -25,8 +25,6 @@ function load_assets()
 end
 
 function load_images()
-    love.graphics.setDefaultFilter("nearest", "nearest")
-    
     local image_list = love.filesystem.getDirectoryItems("project_files/image")
     GAME_DATA.file.image = {}
     
@@ -62,10 +60,10 @@ function load_fonts()
     
     for _, fnt in ipairs(font_list) do
         local name = string.gsub(fnt, ".ttf", "")
-        GAME_DATA.file.font[name] = {}
-        for size=1, 100 do
-            GAME_DATA.file.font[name][size] = love.graphics.newFont("project_files/font/"..fnt, size*2)
-        end
+        GAME_DATA.file.font[name] = {
+            file = "project_files/font/"..fnt,
+            loaded = {}
+        }
     end
 end
 
@@ -122,61 +120,15 @@ function file_read(file, var)
     
     if tonumber(value) then
         value = tonumber(value)
-    end
-    if value == "true" then
+    elseif value == "true" then
         value = true
-    end
-    if value == "false" then
+    elseif value == "false" then
         value = false
-    end
-    if value == "nil" then
+    elseif value == "nil" then
         value = nil
     end
     
     return value
-end
-
-
-
---MAIN--
-
-function load_game()
-    load_assets()
-    GAME_DATA.game = require("load")
-    GAME_DATA.game.update = 0
-    GAME_DATA.game.frame = 0
-    
-    love.window.setTitle(GAME_DATA.game.window_title.." - "..GAME_DATA.game.window_version)
-    scene_enter(GAME_DATA.game.room_start)
-end
-
-function update_game(dt)
-    GAME_DATA.game.update = GAME_DATA.game.update + dt
-    if GAME_DATA.game.update > 1/GAME_DATA.scene.scene_speed then
-        GAME_DATA.game.update = GAME_DATA.game.update - 1/GAME_DATA.scene.scene_speed
-        GAME_DATA.game.frame = GAME_DATA.game.frame + 1
-        
-        GAME_DATA.scene:logic_code()
-        for id, obj in pairs(GAME_DATA.instance) do
-            if obj then
-                obj:event_step()
-            end
-        end
-    
-        update_physics()
-        countdown_alarms()
-        follow_paths()
-    end
-end
-
-function draw_game()
-    if GAME_DATA.scene.view_follow then
-        local follow = GAME_DATA.scene.view_follow
-        view_x(get_variable(follow, "x") + get_variable(follow, "box_width")/2 - GAME_DATA.scene.view_width/2)
-        view_y(get_variable(follow, "y") + get_variable(follow, "box_height")/2 - GAME_DATA.scene.view_height/2)
-    end
-    
-    draw_screen()
 end
 
 
@@ -493,29 +445,20 @@ end
 function path_start(id, path, speed, scale, flip_x, flip_y)
     local new_path = require("project_files.path."..path)()
 
-    
-    if speed then
-        for idx, point in ipairs(new_path) do
+    for idx, point in ipairs(new_path) do
+        if speed then
             new_path[idx].speed = point.speed * speed
         end
-    end
-
-    if scale then
-        for idx, point in ipairs(new_path) do
+        if scale then
             new_path[idx].x = point.x * scale
             new_path[idx].y = point.y * scale
             new_path[idx].speed = point.speed * scale
         end
-    end
-
-    if flip_x then
-        for idx, point in ipairs(new_path) do
+        if flip_x then
             new_path[idx].x = -point.x
         end
-    end
-
-    if flip_y then
-        for idx, point in ipairs(new_path) do
+    
+        if flip_y then
             new_path[idx].y = -point.y
         end
     end
@@ -558,6 +501,7 @@ function draw_screen()
                 img.oy = obj.image:getHeight()/2
             end
             img.id = id
+            
             table.insert(GAME_DATA.render[obj.image_depth], img)
         end
     end
@@ -582,8 +526,10 @@ function draw_set_color(r, g, b, a)
     love.graphics.setColor(r, g, b, a)
 end
 function draw_set_font(font, size)
-    local set_font = font[math.ceil(size/2)*2]
-    love.graphics.setFont(set_font)
+    if not font.loaded[size] then
+        font.loaded[size] = love.graphics.newFont(font.file, size)
+    end
+    love.graphics.setFont(font.loaded[size])
 end
 function draw_rectangle(x1, y1, x2, y2, mode)
     love.graphics.rectangle(mode, x1, y1, x2-x1, y2-y1)
