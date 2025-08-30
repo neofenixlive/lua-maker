@@ -26,3 +26,5 @@ Every .lua file inside script folder will be run when the game
 starts, so use it to define global variables and custom functions.
 
 ##### (Made by neofenixlive)
+
+================================
