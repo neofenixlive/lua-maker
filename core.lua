@@ -1,69 +1,80 @@
 GAME_DATA = {
     file={},
+
     instance={},
     scene={},
+
     mouse={},
     keyboard={},
-    playback={}
+
+    render={},
+    playback={},
+    
+    timer={}
 }
 
 
 
 --ASSETS--
 
+function load_assets()
+    load_images()
+    load_sounds()
+    load_fonts()
+    load_scripts()
+end
+
 function load_images()
-    local image_list = love.filesystem.getDirectoryItems("game_files/image")
+    love.graphics.setDefaultFilter("nearest", "nearest")
+    
+    local image_list = love.filesystem.getDirectoryItems("project_files/image")
     GAME_DATA.file.image = {}
     
-    local extensions = {".png", ".jpg", ".bmp", ".tga"}
+    local extensions = {".png", ".jpg", ".bmp"}
     for _, img in ipairs(image_list) do
         local name = img
         for _, format in ipairs(extensions) do
-            string.gsub(name, format, "")
+            name = string.gsub(name, format, "")
         end
 
-        GAME_DATA.file.image[name] = love.graphics.newImage("game_files/image/"..img)
+        GAME_DATA.file.image[name] = love.graphics.newImage("project_files/image/"..img)
     end
 end
 
 function load_sounds()
-    local sound_list = love.filesystem.getDirectoryItems("game_files/sound")
+    local sound_list = love.filesystem.getDirectoryItems("project_files/sound")
     GAME_DATA.file.sound = {}
     
     local extensions = {".mp3", ".wav", ".ogg"}
     for _, snd in ipairs(sound_list) do
         local name = snd
         for _, format in ipairs(extensions) do
-            string.gsub(name, format, "")
+            name = string.gsub(name, format, "")
         end
 
-        GAME_DATA.file.sound[name] = love.audio.newSource("game_files/sound/"..snd, "static")
+        GAME_DATA.file.sound[name] = love.audio.newSource("project_files/sound/"..snd, "static")
     end
 end
 
 function load_fonts()
-    local font_list = love.filesystem.getDirectoryItems("game_files/font")
+    local font_list = love.filesystem.getDirectoryItems("project_files/font")
     GAME_DATA.file.font = {}
     
     for _, fnt in ipairs(font_list) do
         local name = string.gsub(fnt, ".ttf", "")
-        GAME_DATA.file.font[name] = love.graphics.newFont("game_files/font/"..fnt)
+        GAME_DATA.file.font[name] = {}
+        for size=1, 100 do
+            GAME_DATA.file.font[name][size] = love.graphics.newFont("project_files/font/"..fnt, size*2)
+        end
     end
 end
 
 function load_scripts()
-    local script_list = love.filesystem.getDirectoryItems("game_files/script")
+    local script_list = love.filesystem.getDirectoryItems("project_files/script")
     for _, scr in ipairs(script_list) do
         local name = string.gsub(scr, ".lua", "")
-        require("game_files.script."..name)
+        require("project_files.script."..name)
     end
-end
-
-function load_assets()
-    load_images()
-    load_sounds()
-    load_fonts()
-    load_scripts()
 end
 
 function get_asset(t, n)
@@ -83,7 +94,7 @@ function file_delete(file)
 end
 
 function file_write(file, var, value)
-    local write = "<var>"..var.."="..tostring(value).."</var>"
+    local write = "<var>"..var.."="..tostring(value).."</var>\n"
 
     if not love.filesystem.read(file) then
         love.filesystem.write(file, write)
@@ -107,39 +118,65 @@ function file_read(file, var)
 
     local content = love.filesystem.read(file)
     local pattern = "<var>"..var.."=(.-)</var>"
-    local read = string.match(content, pattern)
-
-    if read == "true" then
-        return true
+    local value = string.match(content, pattern)
+    
+    if tonumber(value) then
+        value = tonumber(value)
     end
-    if read == "false" then
-        return false
+    if value == "true" then
+        value = true
     end
-    if read == "nil" then
-        return nil
+    if value == "false" then
+        value = false
     end
-    if tonumber(read) then
-        return tonumber(read)
+    if value == "nil" then
+        value = nil
     end
-    return read
+    
+    return value
 end
 
 
 
 --MAIN--
 
-function update_game()
-    update_physics()
-    for _, i in pairs(GAME_DATA.instance) do
-        i:event_step()
+function load_game()
+    load_assets()
+    GAME_DATA.game = require("load")
+    GAME_DATA.game.update = 0
+    GAME_DATA.game.frame = 0
+    
+    love.window.setTitle(GAME_DATA.game.window_title.." - "..GAME_DATA.game.window_version)
+    scene_enter(GAME_DATA.game.room_start)
+end
+
+function update_game(dt)
+    GAME_DATA.game.update = GAME_DATA.game.update + dt
+    if GAME_DATA.game.update > 1/GAME_DATA.scene.scene_speed then
+        GAME_DATA.game.update = GAME_DATA.game.update - 1/GAME_DATA.scene.scene_speed
+        GAME_DATA.game.frame = GAME_DATA.game.frame + 1
+        
+        GAME_DATA.scene:logic_code()
+        for id, obj in pairs(GAME_DATA.instance) do
+            if obj then
+                obj:event_step()
+            end
+        end
+    
+        update_physics()
+        countdown_alarms()
+        follow_paths()
     end
 end
 
-function render_game()
-    render_animation()
-    for _, i in pairs(GAME_DATA.instance) do
-        i:event_draw()
+function draw_game()
+    if GAME_DATA.scene.view_follow then
+        local follow = GAME_DATA.scene.view_follow
+        view_x(get_variable(follow, "x") + get_variable(follow, "box_width")/2 - GAME_DATA.scene.view_width/2)
+        view_y(get_variable(follow, "y") + get_variable(follow, "box_height")/2 - GAME_DATA.scene.view_height/2)
     end
+    
+    draw_screen()
 end
 
 
@@ -148,7 +185,7 @@ end
 
 function create_instance(obj, x, y)
     local id = #GAME_DATA.instance+1
-    local instance = require("game_files.object."..obj)()
+    local instance = require("project_files.object."..obj)()
     
     GAME_DATA.instance[id] = instance
     instance.id = id
@@ -170,7 +207,7 @@ function get_variable(id, var)
 end
 
 function set_variable(id, var, value)
-    GAME_DATA.instance[id].var = value
+    GAME_DATA.instance[id][var] = value
 end
 
 
@@ -179,17 +216,18 @@ end
 
 function scene_enter(room)
     GAME_DATA.instance = {}
+    GAME_DATA.alarm = {}
     
-    local scene = require("game_files.room."..room)()
+    local scene = require("project_files.room."..room)()
     GAME_DATA.scene = scene
     GAME_DATA.scene.room = room
 
+    GAME_DATA.scene:enter_code()
+    love.window.setMode(scene.view_width, scene.view_height, {resizable = false})
+    
     for _, i in ipairs(GAME_DATA.scene.scene_build) do
         create_instance(i.object, i.x, i.y)
     end
-    
-    GAME_DATA.scene:creation_code()
-    love.window.setMode(scene.view_width, scene.view_height, {resizable = false})
 end
 
 function scene_width()
@@ -198,11 +236,17 @@ end
 function scene_height()
     return GAME_DATA.scene.scene_height
 end
-function view_x()
-    return GAME_DATA.scene.view_x
+function view_x(x)
+    if not x then
+        return GAME_DATA.scene.view_x
+    end
+    GAME_DATA.scene.view_x = x
 end
-function view_y()
-    return GAME_DATA.scene.view_y
+function view_y(y)
+    if not y then
+        return GAME_DATA.scene.view_y
+    end
+    GAME_DATA.scene.view_y = y
 end
 function view_follow(id)
     GAME_DATA.scene.view_follow = id
@@ -239,18 +283,70 @@ end
 
 
 
+--TIME--
+
+function countdown_alarms()
+    for id, alarm in pairs(GAME_DATA.timer) do
+        if alarm then
+            alarm.time = alarm.time - 1
+            if alarm.time == 0 then
+                alarm.code()
+                GAME_DATA.timer[id] = nil
+            end
+        end
+    end
+end
+
+function date_time(t)
+    local times = {second="S", minute="M", hour="H"}
+    return os.date("%"..times[t], os.time())
+end
+
+function date_calendar(t)
+    local calendars = {day="d", month="m", year="Y"}
+    return os.date("%"..calendars[t], os.time())
+end
+
+function alarm_create(time, code)
+    local id = #GAME_DATA.timer+1
+    GAME_DATA.timer[id] = {time=time, code=code}
+    return id
+end
+
+function alarm_remove(id)
+    GAME_DATA.timer[id] = nil
+end
+
+
+
 --PHYSICS--
 
 function update_physics()
-    for _, i in pairs(GAME_DATA.instance) do
-        i.x = i.x + i.hspeed
-        i.y = i.y + i.vspeed
+    for id, box in pairs(GAME_DATA.instance) do
+        if box and not box.box_locked then
+            box.x = box.x + box.hspeed
+            box.y = box.y + box.vspeed
+    
+            if box.hspeed > 0 then
+                box.hspeed = box.hspeed - box.friction
+                if box.hspeed < 0 then
+                    box.hspeed = 0
+                end
+            end
+            if box.hspeed < 0 then
+                box.hspeed = box.hspeed + box.friction
+                if box.hspeed > 0 then
+                    box.hspeed = 0
+                end
+            end
+            box.vspeed = box.vspeed + box.gravity
+        end
     end
 end
 
 function position_meeting(x, y, obj)
-    for _, box in ipairs(GAME_DATA.instance) do
-        if box.object == obj then
+    for id, box in pairs(GAME_DATA.instance) do
+        if box and box.object == obj and box.box_collide then
             if box.x<x and box.x+box.box_width>x and box.y<y and box.y+box.height>y then
                 return box.id
             end
@@ -259,9 +355,11 @@ function position_meeting(x, y, obj)
 end
 
 function position_free(x, y)
-    for _, box in ipairs(GAME_DATA.instance) do
-        if box.x<x and box.x+box.box_width>x and box.y<y and box.y+box.height>y then
-            return false
+    for id, box in pairs(GAME_DATA.instance) do
+        if box and box.box_collide then
+            if box.x<x and box.x+box.box_width>x and box.y<y and box.y+box.height>y then
+                return false
+            end
         end
     end
     return true
@@ -271,8 +369,8 @@ function place_meeting(id, x, y, obj)
     local width = GAME_DATA.instance[id].box_width
     local height = GAME_DATA.instance[id].box_height
 
-    for _, box in ipairs(GAME_DATA.instance) do
-        if box.id ~= id and box.object == obj then
+    for id, box in pairs(GAME_DATA.instance) do
+        if box and box.id ~= id and box.object == obj and box.box_collide then
             if (box.x<x+width and
                 box.x+box.box_width>x and
                 box.y<y+height and
@@ -287,8 +385,8 @@ function place_free(id, x, y)
     local width = GAME_DATA.instance[id].box_width
     local height = GAME_DATA.instance[id].box_height
 
-    for _, box in ipairs(GAME_DATA.instance) do
-        if box.id ~= id then
+    for id, box in pairs(GAME_DATA.instance) do
+        if box and box.id ~= id and box.box_collide then
             if (box.x<x+width and
                 box.x+box.box_width>x and
                 box.y<y+height and
@@ -360,40 +458,132 @@ function point_direction(x1, y1, x2, y2)
 end
 
 function out_of_bounds(x, y)
-    return (x<0 and y<0 and x>GAME_DATA.scene.scene_width and y>GAME_DAYA.scene.scene_height)
+    return (x<0 and y<0 and x>scene_width() and y>scene_height())
 end
 
 
 
---ANIMATION--
+--PATH--
 
-function render_animation()
-    if GAME_DATA.scene.view_follow then
-        local follow = GAME_DATA.instance[GAME_DATA.scene.view_follow]
-        GAME_DATA.scene.view_x = follow.x
-        GAME_DATA.scene.view_y = follow.y
+function follow_paths()
+    for id, obj in pairs(GAME_DATA.instance) do
+        if obj and obj.path then
+            local point_x = obj.path[obj.path_point].x + obj.path_xbegin
+            local point_y = obj.path[obj.path_point].y + obj.path_ybegin
+            local point_speed = obj.path[obj.path_point].speed
+            
+            local old_x = obj.x
+            local old_y = obj.y
+            
+            move_towards(id, point_x, point_y, point_speed)
+            
+            if old_x == obj.x and old_y == obj.y then
+                obj.path_point = obj.path_point + 1
+                if obj.path_point > #obj.path then
+                    path_stop(id)
+                end
+                
+                obj.x = point_x
+                obj.y = point_y
+            end
+        end
     end
+end
+
+function path_start(id, path, speed, scale, flip_x, flip_y)
+    local new_path = require("project_files.path."..path)()
+
     
-    local view_x = GAME_DATA.scene.view_x
-    local view_y = GAME_DATA.scene.view_y
-    love.graphics.draw(GAME_DATA.scene.scene_background, -view_x, -view_y)
+    if speed then
+        for idx, point in ipairs(new_path) do
+            new_path[idx].speed = point.speed * speed
+        end
+    end
 
-    for _, i in pairs(GAME_DATA.instance) do
-        local x = i.x + i.box_width/2 - view_x
-        local y = i.y + i.box_height/2 - view_y
-        local angle = (i.image_angle * (math.pi/180)) 
-        local ox = i.image:getWidth()/2
-        local oy = i.image:getHeight()/2
+    if scale then
+        for idx, point in ipairs(new_path) do
+            new_path[idx].x = point.x * scale
+            new_path[idx].y = point.y * scale
+            new_path[idx].speed = point.speed * scale
+        end
+    end
 
-        love.graphics.draw(i.image, x, y, angle, i.image_xscale, i.image_yscale, ox, oy)
+    if flip_x then
+        for idx, point in ipairs(new_path) do
+            new_path[idx].x = -point.x
+        end
+    end
+
+    if flip_y then
+        for idx, point in ipairs(new_path) do
+            new_path[idx].y = -point.y
+        end
+    end
+
+    set_variable(id, "path", new_path)
+    set_variable(id, "path_point", 1)
+    set_variable(id, "path_xbegin", get_variable(id, "x"))
+    set_variable(id, "path_ybegin", get_variable(id, "y"))
+end
+
+function path_stop(id)
+    set_variable(id, "path", nil)
+    set_variable(id, "path_point", 0)
+    set_variable(id, "path_xbegin", 0)
+    set_variable(id, "path_ybegin", 0)
+end
+
+
+
+--RENDER--
+
+function draw_screen()
+    GAME_DATA.render = {}
+    
+    for id, obj in pairs(GAME_DATA.instance) do
+        if obj and obj.image_visible then
+            if not GAME_DATA.render[obj.image_depth] then
+                GAME_DATA.render[obj.image_depth] = {}
+            end
+            
+            local img = {}
+            if obj.image then 
+                img.image = obj.image
+                img.x = obj.x + obj.box_width/2 - view_x()
+                img.y = obj.y + obj.box_height/2 - view_y()
+                img.r = (obj.image_angle * (math.pi/180)) 
+                img.sx = obj.image_xscale
+                img.sy = obj.image_yscale
+                img.ox = obj.image:getWidth()/2
+                img.oy = obj.image:getHeight()/2
+            end
+            img.id = id
+            table.insert(GAME_DATA.render[obj.image_depth], img)
+        end
+    end
+
+    if GAME_DATA.scene.scene_background then
+        love.graphics.setColor(255, 255, 255)
+        love.graphics.draw(GAME_DATA.scene.scene_background, -view_x(), -view_y())
+    end
+
+    for id1, depth in pairs(GAME_DATA.render) do
+        for id2, img in ipairs(depth) do
+            love.graphics.setColor(255, 255, 255)
+            if img.image then
+                love.graphics.draw(img.image, img.x, img.y, img.r, img.sx, img.sy, img.ox, img.oy)
+            end
+            GAME_DATA.instance[img.id]:event_draw()
+        end
     end
 end
 
 function draw_set_color(r, g, b, a)
     love.graphics.setColor(r, g, b, a)
 end
-function draw_set_font(font)
-    love.graphics.setFont(font)
+function draw_set_font(font, size)
+    local set_font = font[math.ceil(size/2)*2]
+    love.graphics.setFont(set_font)
 end
 function draw_rectangle(x1, y1, x2, y2, mode)
     love.graphics.rectangle(mode, x1, y1, x2-x1, y2-y1)
@@ -420,9 +610,9 @@ end
 
 --PLAYBACK--
 
-function sound_play(src)
+function sound_play(source)
     local id = #GAME_DATA.playback+1
-    local sound = src:clone()
+    local sound = source:clone()
 
     GAME_DATA.playback[id] = sound
     love.audio.play(GAME_DATA.playback[id])
@@ -441,8 +631,8 @@ function sound_stop(id)
     GAME_DATA.playback[id] = nil
 end
 function sound_stop_all()
-    for _, i in ipairs(GAME_DATA.playback) do
-        love.audio.stop(i)
+    for id, snd in ipairs(GAME_DATA.playback) do
+        love.audio.stop(snd)
     end
     GAME_DATA.playback = {}
 end

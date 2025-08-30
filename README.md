@@ -1,10 +1,10 @@
 ================================
 
-# LuaMaker 0.1 - LÖVE2D Game development library
+# LuaMaker v2 - LÖVE2D Game development library
 
 
 
-.:Lightweight 10kb library size:.
+.:Lightweight 16kb library size:.
 
 .:Uses snake_case for variables/functions:.
 
@@ -15,7 +15,7 @@
 # How to use:
 
 
-Insert all your assets inside the "game_files" folder,
+Insert all your assets inside the "project_files" folder,
 and sort them into each category (images, sounds or fonts).
 
 To create a new object/room, open their respective folders

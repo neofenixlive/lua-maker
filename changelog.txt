@@ -1,0 +1,22 @@
+================================
+LuaMaker - LÖVE2D Game development library
+
+Made by neofenixlive
+================================
+(+: Added, -:Removed, /:Updated, *:Fixed)
+
+v1:
+    Added Instances and Scenes.
+    Added File writing and reading.
+    Added Input for mouse and keyboard.
+    Added Physics collision and movement.
+    Added Image rendering.
+    Added Sound playback.
+
+v2:
+    Added Time alarms and formatting.
+    Added Path following.
+    Added Game loading via load.lua.
+    Updated Physics: +friction, +gravity, +box_collide, +box_locked,
+    Updated Image: +image_visible, +image_depth, *load_fonts(), *event_draw().
+    Updated Scene: creation_code()/enter_code(), +logic_code().

@@ -1,14 +1,13 @@
 require("core")
 
 function love.load()
-    load_assets()
-    scene_enter("example")
+    load_game()
 end
 
 function love.update(dt)
-    update_game()
+    update_game(dt)
 end
 
 function love.draw()
-    render_game()
+    draw_game()
 end

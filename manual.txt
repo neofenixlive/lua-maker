@@ -1,7 +1,7 @@
 ================================
-LuaMaker 0.1 - LÖVE2D Game development library
+LuaMaker v2 - LÖVE2D Game development library
 
-.:Lightweight 10kb library size:.
+.:Lightweight 16kb library size:.
 .:Uses snake_case for variables/functions:.
 .:Easy to understand and code:.
 
@@ -23,83 +23,143 @@ starts, so use it to define global variables and custom functions.
 --------------------------------
 
 Variables:
-x (instance) - x position
-y (instance) - y position
-hspeed (instance) - horizontal speed
-vspeed (instance) - vertical speed
-box_width (instance) - hitbox width
-box_height (instance) - hitbox height
-image (instance) - image file
-image_xscale (instance) - image x scaling
-image_yscale (instance) - image y scaling
-image_angle (instance) - image rotation angle
-id (instance) - instance id
-object (instance) - instance object
 
-view_x (scene) - camera x position
-view_y (scene) - camera y position
-view_follow (scene) - camera follow instance
-view_width (scene) - screen width
-view_height (scene) - screen height
-scene_width (scene) - scene width
-scene_height (scene) - scene height
-scene_background (scene) - scene background image
+Instance:
+    x - x position
+    y - y position
+    hspeed - horizontal speed
+    vspeed - vertical speed
+    friction - force agaisnt hspeed
+    gravity - force agaisnt vspeed
+
+    box_width - hitbox width
+    box_height - hitbox height
+    box_collide - hitbox collision detection
+    box_locked - hitbox movement locking
+
+    image - image file
+    image_xscale - image x scale
+    image_yscale - image y scale
+    image_angle - image rotation angle
+    image_visible - image visibility
+    image_depth - image render order
+
+    path - current path
+    path_point - current path point
+    path_xbegin - path x origin
+    path_ybegin - path y origin
+    
+    id - instance id
+    object - instance object name
+
+
+
+Scene:
+    view_x - camera x position
+    view_y - camera y position
+    view_follow - camera follow instance
+    view_width - screen width
+    view_height - screen height
+
+    scene_speed - scene frames per second
+    scene_width - scene width
+    scene_height - scene height
+    scene_background - scene background image
+    scene_build - scene instance list
+    
+    room - scene room name
 
 --------------------------------
 
 Functions:
-get_asset(type, name) - returns the asset file
 
-file_make(file) - makes new (or overwrites) file in game directory
-file_delete(file) - deletes file on game directory
-file_write(variable, value) - writes variable to file
-file_read(variable) - reads variable from file
+File:
+    get_asset(type, name) - returns the asset file
+    file_make(file) - makes new (or overwrites) file in game directory
+    file_delete(file) - deletes file on game directory
+    file_write(variable, value) - writes variable to file
+    file_read(variable) - reads variable from file
 
-create_instance(object, x, y) - creates instance, returns id
-remove_instance(id) - removes instance
-get_variable(id, variable) - gets variable from instance
-set_variable(id, variable, value) - edits variable from instance
 
-scene_enter(name) - changes current scene
-scene_width() - returns scene width
-scene_height() - returns scene height
-view_x() - returns camera x position
-view_y() - returns camera y position
-view_follow(id) - sets camera to follow instance
 
-keyboard_check(key) - returns if key is pressed
-mouse_x() - returns mouse x position
-mouse_y() - returns mouse y position
-mouse_button() - returns mouse button (1:left, 2:right, nil:none)
+Instance:
+    create_instance(object, x, y) - creates instance, returns id
+    remove_instance(id) - removes instance
+    get_variable(id, variable) - gets variable from instance
+    set_variable(id, variable, value) - edits variable from instance
 
-position_meeting(x, y, object) - returns id if theres object at (x, y)
-position_free(x, y) - returns if (x, y) has no instances
-place_meeting(id, x, y, object) - returns id if instance at (x, y) is colliding with object
-place_free(id, x, y) - returns if instance at (x, y) is not colliding
-move_towards(id, x, y, speed) - moves instance towards (x, y) by speed units
-move_boundaries(id1, id2) - moves instance 1 until it borders with instance 2
-point_direction(x1, y1, x2, y2) - returns angle for (x1, y1) to be pointing at (x2, y2)
-out_of_bounds(x, y) - returns if (x, y) is outside of scene
 
-draw_set_font(font) - sets text font
-draw_set_color(r, g, b, a) - sets draw color
-draw_rectangle(x1, y1, x2, y2, mode) - draws rectangle
-draw_circle(x, y, r, mode) - draws circle
-draw_point(x, y, size) - draws point
-draw_line(x1, y1, x2, y2, width) - draws line
-draw_text(label, x, y) - draws formatted text
-draw_image(image, x, y, rotation, scalex, scaley) - draws transformed image
 
-sound_play(sound) - plays sound, returns id
-sound_resume(id) - resumes sound
-sound_pause(id) - pauses sound
-sound_stop(id) - stops sound
-sound_stop_all() - stops all sounds
-sound_volume(value) - changes global volume
+Scene:
+    scene_enter(name) - changes current scene
+    scene_width() - returns scene width
+    scene_height() - returns scene height
+    view_x(new_x) - changes camera x position, returns it if new_x is nil
+    view_y(new_y) - changes camera y position, returns it if new_y is nil
+    view_follow(id) - sets camera to follow instance
 
-event_create() - called when instance is created
-event_remove() - called when instance is removed
-event_step() - called each frame for all instances (update)
-event_draw() - called each frame for all instances (render)
 
-creation_code() - called after scene is loaded
+
+Input:
+    keyboard_check(key) - returns if key is pressed
+    mouse_x() - returns mouse x position
+    mouse_y() - returns mouse y position
+    mouse_button() - returns mouse button (1:left, 2:right, nil:none)
+
+
+
+Time:
+    date_time(type) - returns time as number (type: second, minute, hour)
+    date_calendar(type) - returns date as number (type: day, month, year)
+    alarm_create(time, function) - creates alarm that runs function after time, returns id
+    alarm_remove(id) - removes alarm
+
+
+
+Physics:
+    position_meeting(x, y, object) - returns id if theres object at (x, y)
+    position_free(x, y) - returns if (x, y) has no instances
+    place_meeting(id, x, y, object) - returns id if instance at (x, y) is colliding with object
+    place_free(id, x, y) - returns if instance at (x, y) is not colliding
+    move_towards(id, x, y, speed) - moves instance towards (x, y) by speed units
+    move_boundaries(id1, id2) - moves instance 1 until it borders with instance 2
+    point_direction(x1, y1, x2, y2) - returns angle for (x1, y1) to be pointing at (x2, y2)
+    out_of_bounds(x, y) - returns if (x, y) is outside of scene
+
+
+
+Path:
+    path_start(id, path, speed, scale, flip_x, flip_y) - instance follows path (speed:number, scale:number, flip_x:boolean, flip_y:boolean)
+    path_stop(id) - stops instance from following path
+    
+    
+
+Image:
+    draw_set_font(font, size) - sets text font
+    draw_set_color(r, g, b, a) - sets draw color
+    draw_rectangle(x1, y1, x2, y2, mode) - draws rectangle
+    draw_circle(x, y, r, mode) - draws circle
+    draw_point(x, y, size) - draws point
+    draw_line(x1, y1, x2, y2, width) - draws line
+    draw_text(label, x, y) - draws formatted text
+    draw_image(image, x, y, rotation, scalex, scaley) - draws transformed image
+
+
+
+Sound:
+    sound_play(sound) - plays sound, returns id
+    sound_resume(id) - resumes sound
+    sound_pause(id) - pauses sound
+    sound_stop(id) - stops sound
+    sound_stop_all() - stops all sounds
+    sound_volume(value) - changes global volume
+
+
+
+Event:
+    event_create() - called when instance is created
+    event_remove() - called when instance is removed
+    event_step() - called each frame for all instances (update)
+    event_draw() - called each frame for all instances (render)
+    enter_code() - called before entering scene
+    logic_code() - called each frame for scene
