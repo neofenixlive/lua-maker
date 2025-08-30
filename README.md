@@ -1,6 +1,6 @@
 ================================
 
-# LuaMaker v2 - LÖVE2D Library for Game Development.
+# LuaMaker v2 - LÖVE2D Game development library.
 
 
 .:Lightweight 16kb core size:.
